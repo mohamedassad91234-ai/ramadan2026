@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>رمضان كريم</title>
+
+<style>
+/* ===== عام ===== */
+body{
+  margin:0;
+  font-family:"Times New Roman",Tahoma;
+  background:linear-gradient(#0f3d2e,#145a32);
+  overflow-x:hidden;
+}
+
+/* ===== فوانيس جانبية ===== */
+.side{
+  position:fixed;
+  top:0;
+  width:70px;
+  height:100vh;
+  pointer-events:none;
+  z-index:1;
+}
+.left{left:0}
+.right{right:0}
+
+.lantern{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  width:36px;
+  height:64px;
+  background:radial-gradient(circle,#fff2b0 0%,#f5a623 60%);
+  border-radius:8px;
+  box-shadow:0 0 14px rgba(255,215,100,.8);
+  animation:fall linear infinite;
+}
+.lantern::before{
+  content:"";
+  position:absolute;
+  top:-10px;left:50%;
+  transform:translateX(-50%);
+  width:16px;height:10px;
+  background:#444;border-radius:4px 4px 0 0;
+}
+.lantern::after{
+  content:"";
+  position:absolute;
+  bottom:-8px;left:50%;
+  transform:translateX(-50%);
+  width:18px;height:8px;
+  background:#333;border-radius:0 0 4px 4px;
+}
+@keyframes fall{
+  from{top:-80px}
+  to{top:110vh}
+}
+
+/* ===== الكروت ===== */
+.card{
+  max-width:420px;
+  margin:90px auto;
+  background:#fff;
+  border-radius:12px;
+  padding:24px;
+  text-align:center;
+  display:none;
+  position:relative;
+  z-index:5;
+}
+.card.active{display:block}
+
+button,input,select{
+  width:100%;
+  padding:10px;
+  margin-top:12px;
+  font-size:14px;
+}
+button{
+  background:#145a32;
+  color:#fff;
+  border:0;
+  border-radius:20px;
+  cursor:pointer;
+}
+
+/* ===== Spinner ===== */
+#spinner{
+  display:none;
+  margin-top:12px;
+  text-align:center;
+  font-size:13px;
+  color:#555;
+}
+.loader{
+  width:28px;height:28px;
+  border:4px solid #ddd;
+  border-top:4px solid #145a32;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto 6px;
+}
+@keyframes spin{100%{transform:rotate(360deg)}}
+
+/* ===== Footer ===== */
+.site-footer{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:14px 0;
+  margin-top:40px;
+  color:#eaeaea;
+  font-size:13px;
+  opacity:0.85;
+  direction:ltr;
+  text-align:center;
+}
+
+/* ===== موبايل ===== */
+@media(max-width:600px){
+  .side{width:50px}
+  .lantern{width:30px;height:54px}
+}
+</style>
+</head>
+
+<body>
+
+<!-- فوانيس -->
+<div class="side left">
+  <div class="lantern" style="animation-duration:10s;"></div>
+  <div class="lantern" style="animation-duration:14s;animation-delay:3s;"></div>
+</div>
+<div class="side right">
+  <div class="lantern" style="animation-duration:12s;"></div>
+  <div class="lantern" style="animation-duration:16s;animation-delay:4s;"></div>
+</div>
+
+<!-- صوت -->
+<audio id="ramadanAudio"
+src="https://www.dropbox.com/scl/fi/mdrqo24p7ws6f9ntkp1il/Ramdann22.mp3?rlkey=ifuo7v11gxgptnftufc9vwjp2&st=bjok7i4o&raw=1"
+loop preload="auto" playsinline muted></audio>
+
+<!-- دخول -->
+<div class="card active" id="loginCard">
+  <h2>🌙 رمضان كريم</h2>
+  <h2>كل عام وانتم بخير وسعادة</h2>
+  <p>استطلاع رغبات بونات جمعية الخدمات</p>
+  <p>اجمالى البونات 6000 جنية</p>
+  <button onclick="startSystem()">تسجيل الدخول</button>
+</div>
+
+<!-- تسجيل -->
+<div class="card" id="formCard">
+  <h3>تسجيل الرغبة</h3>
+
+  <input id="code" placeholder="ادخل الكود" inputmode="numeric">
+  <!-- مهم: مرّر event -->
+  <button onclick="search(event)">الاطلاع على البيانات</button>
+
+  <div id="result" style="margin-top:10px"></div>
+
+  <select id="wish">
+    <option value="">اختر الرغبة</option>
+    <option>كارفور</option>
+    <option>هايبر وان</option>
+    <option>جملة ماركت</option>
+    <option>كازيون</option>
+    <option>بيم</option>
+    <option>العبد</option>
+  </select>
+
+  <button id="saveBtn" onclick="saveWish()">تسجيل</button>
+
+  <!-- Spinner موحّد -->
+  <div id="spinner">
+    <div class="loader"></div>
+    <span id="spinnerText">جاري التنفيذ... برجاء الانتظار</span>
+  </div>
+</div>
+
+<footer class="site-footer">
+  ©️ <span id="year"></span> Mohamed Asaad
+</footer>
+
+<script>
+/* السنة */
+document.getElementById("year").textContent = new Date().getFullYear();
+
+/* لينك Apps Script */
+const WEB_APP_URL =
+"https://script.google.com/macros/s/AKfycbw9LScTOfCj2_UZAS42xnzy1w4g18dA922Af_nyDlvNcV-DZrLXzkKZxA1drSi_P4i_5w/exec";
+
+let currentEmp = null;
+
+/* دخول */
+function startSystem(){
+  const a = document.getElementById("ramadanAudio");
+  a.muted = false;
+  a.play();
+  document.getElementById("loginCard").classList.remove("active");
+  document.getElementById("formCard").classList.add("active");
+}
+
+/* تحويل أرقام عربية */
+function normalizeDigits(v){
+  const a="٠١٢٣٤٥٦٧٨٩";
+  return v.replace(/[٠-٩]/g,d=>a.indexOf(d));
+}
+
+/* ===== استعلام (Spinner) ===== */
+function search(event){
+  let code = document.getElementById("code").value.trim();
+  code = normalizeDigits(code);
+
+  const btn = event.target;
+  const spinner = document.getElementById("spinner");
+  const spinnerText = document.getElementById("spinnerText");
+
+  // واجهة
+  btn.disabled = true;
+  spinnerText.innerText = "جاري الاستعلام... برجاء الانتظار";
+  spinner.style.display = "block";
+
+  fetch(WEB_APP_URL,{
+    method:"POST",
+    body:new URLSearchParams({
+      action:"search",
+      code:code
+    })
+  })
+  .then(r => r.text())
+  .then(txt => {
+    let res;
+    try { res = JSON.parse(txt); }
+    catch { document.getElementById("result").innerHTML = "خطأ في الاتصال"; return; }
+
+    if(res.status==="ok"){
+      currentEmp = { code:code, name:res.name, dept:res.dept };
+      document.getElementById("result").innerHTML =
+        `** ${res.name}<br>** ${res.dept}`;
+    }else{
+      currentEmp = null;
+      document.getElementById("result").innerHTML = "الكود غير مسجل";
+    }
+  })
+  .catch(()=>{
+    document.getElementById("result").innerHTML = "خطأ في الاتصال";
+  })
+  .finally(()=>{
+    spinner.style.display = "none";
+    btn.disabled = false;
+  });
+}
+
+/* ===== تسجيل (Spinner) ===== */
+function saveWish(){
+  if(!currentEmp){ alert("يرجى إدخال الكود والاطلاع على البيانات"); return; }
+
+  const wish = document.getElementById("wish").value;
+  if(!wish){ alert("اختر الرغبة"); return; }
+
+  const btn = document.getElementById("saveBtn");
+  const spinner = document.getElementById("spinner");
+  const spinnerText = document.getElementById("spinnerText");
+
+  btn.disabled = true;
+  btn.innerText = "جاري التسجيل...";
+  spinnerText.innerText = "جاري التسجيل... برجاء الانتظار";
+  spinner.style.display = "block";
+
+  fetch(WEB_APP_URL,{
+    method:"POST",
+    body:new URLSearchParams({
+      action:"save",
+      code:currentEmp.code,
+      name:currentEmp.name,
+      dept:currentEmp.dept,
+      wish:wish
+    })
+  })
+  .then(r=>r.text())
+  .then(msg=>{
+    if(msg==="OK"){
+      alert("تم التسجيل بنجاح وستصلك رسالة بتأكيد الرغبة بعد انتهاء فترة التسجيل 🌙");
+      location.reload();
+    }else{
+      alert(msg==="EXISTS" ? "تم التسجيل من قبل" : "حدث خطأ");
+      btn.disabled=false; btn.innerText="تسجيل";
+      spinner.style.display="none";
+    }
+  })
+  .catch(()=>{
+    alert("تعذر الاتصال بالخادم");
+    btn.disabled=false; btn.innerText="تسجيل";
+    spinner.style.display="none";
+  });
+}
+</script>
+
+</body>
+</html>
