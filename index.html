@@ -240,8 +240,15 @@ function search(event){
 
     if(res.status==="ok"){
       currentEmp = { code:code, name:res.name, dept:res.dept };
-      document.getElementById("result").innerHTML =
-        `** ${res.name}<br>** ${res.dept}`;
+      document.getElementById("result").innerHTML = `
+  <div style="margin-bottom:8px;font-weight:bold;color:#1f8a70;">
+    🌙 معنا عيد الأضحى المبارك
+  </div>
+  <div><strong>الاسم:</strong> ${res.name}</div>
+  <div><strong>الإدارة:</strong> ${res.dept}</div>
+`;
+   
+
     }else{
       currentEmp = null;
       document.getElementById("result").innerHTML = "الكود غير مسجل";
@@ -302,4 +309,5 @@ function saveWish(){
 </script>
 
 </body>
+
 </html>
